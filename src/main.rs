@@ -1,3 +1,5 @@
+
+use std::rc::Rc;
 use std::fs::File;
 use std::path::Path;
 use std::collections::HashMap;
@@ -5,8 +7,16 @@ use std::collections::HashMap;
 use parquet::file::reader::{FileReader, SerializedFileReader, ParquetReader};
 use parquet::record::{Row, ListAccessor, RowAccessor};
 
-use parquet_derive::ParquetRecordWriter;
-use parquet::file::writer::RowGroupWriter;
+use parquet_derive::{ParquetRecordWriter};
+
+use parquet::{
+    file::{
+        properties::WriterProperties,
+        writer::{FileWriter, SerializedFileWriter, RowGroupWriter},
+    },
+    schema::parser::parse_message_type,
+};
+
 
 trait RecordWriter<T> {
     fn write_to_row_group(&self, row_group_writer: &mut Box<dyn RowGroupWriter>);
@@ -14,19 +24,37 @@ trait RecordWriter<T> {
 
 #[derive(ParquetRecordWriter)]
 struct MyStruct {
-    start: u64,
-    end: u64,
-    byte_start: u64,
-    byte_end: u64
+    start: i64,
+    end: i64,
+    byte_start: i64,
+    byte_end: i64
 }
 
+
+
 fn write_parquet(fname: &str) {
+
+    let schema_str = "message schema {
+            REQUIRED INT64         start;
+            REQUIRED INT64         end;
+            REQUIRED INT64         byte_start;
+            REQUIRED INT64         byte_end;
+        }";
+
+    let schema = Rc::new(parse_message_type(schema_str).unwrap());
+    let props = Rc::new(WriterProperties::builder().build());
+
 // Initialize your parquet file
-    let mut writer = SerializedFileWriter::new(file, schema, props).unwrap();
+    let mut writer = SerializedFileWriter::new(File::create(&Path::new(fname)).unwrap(), schema, props).unwrap();
     let mut row_group = writer.next_row_group().unwrap();
 
 // Build up your records
-    let chunks = vec![MyStruct{...}];
+    let chunks = vec![MyStruct{
+        start: 0,
+        end: 0,
+        byte_start: 0,
+        byte_end: 0
+    }];
 
 // The derived `RecordWriter` takes over here
     (&chunks[..]).write_to_row_group(&mut row_group);
@@ -49,17 +77,7 @@ fn read_parquet(fname: &str) {
     }
 }
 
-//fn create_fields_index<T: ParquetReader>(reader: &SerializedFileReader<T>) -> HashMap<String, usize> {
-//    let metadata = reader.metadata();
-//    let mut map = HashMap::new();
-//    for i in 0..metadata.num_row_groups() {
-//        //let group = metadata.row_group(i);
-//        //println!("{}", group);
-//        //map.insert(col, i);
-//    }
-//    return map;
-//}
-
 fn main() {
-    read_parquet("tests/data/htsnexus_test_NA12878.parquet")
+    read_parquet("tests/data/htsnexus_test_NA12878.parquet");
+    write_parquet("tests/data/htsnexus_test_NA12878_with_voffsets.parquet");
 }
