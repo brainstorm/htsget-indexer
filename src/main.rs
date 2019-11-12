@@ -20,6 +20,7 @@ use schemas::RecordWriter;
 fn write_parquet(fname: &str) {
     let schema_str = schemas::ADAM_ALIGNMENT;
     read_parquet("tests/data/htsnexus_test_NA12878.parquet");
+    //seek_voffset("tests/data/htsnexus_test_NA12878.bam");
 
     // Build up your records
     let chunks = vec![schemas::AdamBAM{
@@ -50,7 +51,6 @@ fn read_parquet(fname: &str) {
     while let Some(record) = iter.next() {
         let genomic_start = record.get_long(1);
         let genomic_end = record.get_long(3);
-        //seek_voffset("tests/data/htsnexus_test_NA12878.parquet");
         println!("{:#?} {:#?}", genomic_start, genomic_end);
         break;
     }
