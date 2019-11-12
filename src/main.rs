@@ -1,3 +1,4 @@
+mod indexer;
 mod parquet_utils;
 mod schemas;
 
@@ -72,17 +73,48 @@ fn handle_parquet(in_fname: &str, out_fname: &str) {
             group_writer.close_column(column_writer).unwrap();
         }
 
-        // Enrich each row
+        // Compute byte starts and ends
+        let mut byte_starts = vec![];
+        let mut byte_ends = vec![];
+        let mut byte_definitions: Vec<i16> = vec![];
+        let mut byte_repetitions: Vec<i16> = vec![];
         for row in group_reader
             .get_row_iter(Some(read_columns.clone()))
             .unwrap()
         {
-            let reference_name = row.get_string(0);
-            let start = row.get_long(1);
-            let end = row.get_long(2);
-            dbg!(reference_name, start, end);
-            break;
+            let reference_name = parquet_utils::get_string(&row, 0);
+            let start = parquet_utils::get_long(&row, 1);
+            let end = parquet_utils::get_long(&row, 2);
+            let (byte_start, byte_end, definition) = match (reference_name, start, end) {
+                (Some(reference_name), Some(start), Some(end)) => {
+                    // Convert to index
+                    let (byte_start, byte_end) = indexer::get_index(reference_name, start, end);
+                    (byte_start, byte_end, 1)
+                }
+                _ => {
+                    // Null row
+                    (0, 0, 1)
+                }
+            };
+            byte_starts.push(byte_start);
+            byte_ends.push(byte_end);
+            byte_definitions.push(definition);
+            byte_repetitions.push(0);
         }
+
+        // Write new columns
+        parquet_utils::write_i64_column(
+            &mut group_writer,
+            &byte_starts,
+            &byte_definitions,
+            &byte_repetitions,
+        );
+        parquet_utils::write_i64_column(
+            &mut group_writer,
+            &byte_ends,
+            &byte_definitions,
+            &byte_repetitions,
+        );
 
         writer.close_row_group(group_writer).unwrap();
     }
