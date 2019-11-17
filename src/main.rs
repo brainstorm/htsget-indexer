@@ -8,6 +8,7 @@ use parquet::file::reader::{FileReader, SerializedFileReader};
 use parquet::record::{RowAccessor};
 
 use parquet::{
+    errors::ParquetError,
     file::{
         properties::WriterProperties,
         writer::{FileWriter, SerializedFileWriter},
@@ -17,31 +18,57 @@ use parquet::{
 
 use schemas::RecordWriter;
 
-fn write_parquet(fname: &str) {
-    let schema_str = schemas::ADAM_ALIGNMENT;
-    read_parquet("tests/data/htsnexus_test_NA12878.parquet");
-    //seek_voffset("tests/data/htsnexus_test_NA12878.bam");
+pub enum Error {
+    SchemaParse(ParquetError),
+    CreateFile(std::io::Error),
+    CreateWriter(ParquetError),
+    CreateWriterGroup(ParquetError),
+//    WriteError(ParquetError),
+    CloseWriterGroup(ParquetError),
+    CloseWriter(ParquetError),
+}
 
+fn write_parquet(fname: &str) -> Result<(), Error> {
     // Build up your records
-    let chunks = vec![schemas::AdamBAM{
-        start: 0,
-        end: 0,
-        byte_start: 0,
-        byte_end: 0
-    }];
+    let chunks = vec![
+        schemas::AdamBAM {
+            start: 0,
+            end: 0,
+            byte_start: 0,
+            byte_end: 0
+        },
+        schemas::AdamBAM {
+            start: 10,
+            end: 20,
+            byte_start: 100,
+            byte_end: 200
+        },
+    ];
 
-    let schema = Rc::new(parse_message_type(schema_str).unwrap());
+    let schema = Rc::new(
+        parse_message_type(schemas::ADAM_ALIGNMENT)
+            .map_err(|err| Error::SchemaParse(err))?
+    );
+
     let props = Rc::new(WriterProperties::builder().build());
 
-    // Initialize your parquet file
-    let mut writer = SerializedFileWriter::new(File::create(&Path::new(fname)).unwrap(), schema, props).unwrap();
-    let mut row_group = writer.next_row_group().unwrap();
+    let output_file = File::create(&Path::new(fname))
+        .map_err(|err| Error::CreateFile(err))?;
+
+    let mut writer = SerializedFileWriter::new(output_file, schema, props)
+        .map_err(|err| Error::CreateWriter(err))?;
+
+    let mut row_group = writer.next_row_group()
+        .map_err(|err| Error::CreateWriterGroup(err))?;
 
     // The derived `RecordWriter` takes over here
     (&chunks[..]).write_to_row_group(&mut row_group);
 
-    writer.close_row_group(row_group).unwrap();
-    writer.close().unwrap();
+    writer.close_row_group(row_group)
+        .map_err(|err| Error::CloseWriterGroup(err))?;
+
+    writer.close()
+        .map_err(|err| Error::CloseWriter(err))
 }
 
 fn read_parquet(fname: &str) {
@@ -57,5 +84,7 @@ fn read_parquet(fname: &str) {
 }
 
 fn main() {
+    read_parquet("tests/data/htsnexus_test_NA12878.parquet");
+    //seek_voffset("tests/data/htsnexus_test_NA12878.bam");
     write_parquet("tests/data/htsnexus_test_NA12878_with_voffsets.parquet");
 }
