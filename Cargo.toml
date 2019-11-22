@@ -11,3 +11,4 @@ parquet = "0.15.1"
 parquet_derive = { git = "https://github.com/ccakes/parquet_derive.git" }
 theban_interval_tree = "0.7.1"
 rust-htslib = "0.26.0"
+snafu = "0.6.0"

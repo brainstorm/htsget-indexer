@@ -1,3 +1,5 @@
 /target
 **/*.rs.bk
 .idea
+tests/data/htsnexus_test_NA12878_with_voffsets.parquet
+Cargo.lock

@@ -1,11 +1,23 @@
-mod data;
+use crate::reader::BamReader;
+use crate::indexer::BlockIndexer;
 
-use crate::data::adam::{ get_parquet_fh, write_parquet };
-use crate::data::voffsets::all_voffsets;
+pub mod reader;
+pub mod indexer;
+pub mod store;
+pub mod errors;
 
-fn main() {
-    let voffsets = all_voffsets("tests/data/htsnexus_test_NA12878.bam");
+use errors::Result;
+use crate::store::TsvStore;
 
-    let fh = get_parquet_fh("tests/data/htsnexus_test_NA12878.parquet");
-    write_parquet("tests/data/htsnexus_test_NA12878_with_voffsets.parquet", fh, voffsets);
+fn main() -> Result<()> {
+    let reader_path = "tests/data/htsnexus_test_NA12878.bam".to_string();
+    let reader = BamReader::new(reader_path)?;
+
+    let store_path = "index.tsv";
+    let store = TsvStore::new(store_path)?;
+
+    let block_size: usize = 64 * 1024;
+    let mut indexer = BlockIndexer::new(reader, store, block_size);
+
+    indexer.run()
 }
