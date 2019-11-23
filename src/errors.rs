@@ -14,17 +14,14 @@ pub enum Error {
     #[snafu(display("Error reading BAM file"))]
     BamReadingUnknown,
 
-    #[snafu(display("Error opening store file: {}", source))]
-    StoreOpen { source: std::io::Error },
-
-    #[snafu(display("Error writing into the store: {}", source))]
-    StoreWrite { source: std::io::Error },
-
     #[snafu(display("Too many target names on header: {}", source))]
     TargetNamesTooLong { source: std::num::TryFromIntError },
 
-    #[snafu(display("Error serializing JSON: {}", source))]
-    JsonSerialize { source: serde_json::Error },
+    #[snafu(display("Error creating store: {}", source))]
+    StoreCreate { source: Box<dyn std::error::Error> },
+
+    #[snafu(display("Error saving region: {}", source))]
+    StoreSave { source: Box<dyn std::error::Error> },
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;

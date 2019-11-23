@@ -1,11 +1,21 @@
 [package]
 name = "htsget-indexer"
 version = "0.1.0"
-authors = ["Roman Valls Guimera <brainstorm@nopcode.org>"]
+authors = [
+  "Roman Valls Guimera <brainstorm@nopcode.org>",
+  "Christian Perez Llamas",
+]
 edition = "2018"
 
 [dependencies]
-serde = { version = "1.0.102", features = ["derive"] }
-serde_json = "1.0.41"
-rust-htslib = "0.26.0"
 snafu = "0.6.0"
+rust-htslib = "0.26.0"
+
+serde = { version = "1.0.102", features = ["derive"], optional = true }
+serde_json = { version = "1.0.41", optional = true }
+
+[features]
+default = []
+
+json = ["serde", "serde_json"]
+csv = []

@@ -115,7 +115,9 @@ impl BamReader {
                     seq_start: record.reference_start(),
                     seq_end: record.reference_end(),
                 };
+
                 file_start = file_end;
+
                 Ok(Some(read))
             }
             Ok(false) => Ok(None),
