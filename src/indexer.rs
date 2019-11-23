@@ -66,7 +66,7 @@ impl BlockIndexer {
                         if read_bytes >= self.block_size {
                             for (id, range) in &intervals {
                                 let target_name = &target_names[*id as usize];
-                                self.store.store(target_name.as_str(), range);
+                                self.store.store(target_name.as_str(), range)?;
                             }
 
                             intervals.clear();

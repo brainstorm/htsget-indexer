@@ -1,8 +1,19 @@
 use std::fs::File;
 use std::io::prelude::*;
+use serde::Serialize;
 
 use crate::errors::{Error, Result};
 use crate::indexer::TargetRange;
+use crate::reader::Offset;
+
+#[derive(Serialize)]
+struct Row {
+  target_name: String,
+  coffset_start: Offset,
+  coffest_end: Offset,
+  seq_start: i32,
+  seq_end: i32,
+}
 
 pub struct CsvStore {
     file: File,
@@ -10,10 +21,8 @@ pub struct CsvStore {
 
 impl CsvStore {
     pub fn new(path: &str) -> Result<Self> {
-        let mut file = File::create(path)
+        let file = File::create(path)
             .map_err(|source| Error::StoreOpen { source })?;
-
-        file.write_all(b"target_name,coffset_start,coffset_end,uoffset_start,uoffset_end,seq_start,seq_end\n");
 
         Ok(
             CsvStore {
@@ -23,15 +32,24 @@ impl CsvStore {
     }
 
     pub fn store(&mut self, target_name: &str, range: &TargetRange) -> Result<()> {
-        let data = format!("\"{}\",{},{},{},{},{},{}\n",
-                           target_name,
-                           range.file_start.coffset, range.file_end.coffset,
-                           range.file_start.uoffset, range.file_end.uoffset,
-                           range.seq_start, range.seq_end);
 
-        self.file.write_all(data.as_bytes())
-            .map_err(|source| Error::StoreWrite { source })?;
+      let row = Row {
+        target_name: target_name.to_string(),
+        coffset_start: range.file_start.coffset,
+        coffest_end: range.file_end.coffset,
+        seq_start: range.seq_start,
+        seq_end: range.seq_end,
+      };
 
-        Ok(())
+      let data = serde_json::to_string(&row)
+          .map_err(|source| Error::JsonSerialize { source })?;
+
+      self.file.write_all(data.as_bytes())
+          .map_err(|source| Error::StoreWrite { source })?;
+
+      self.file.write_all(b"\n")
+          .map_err(|source| Error::StoreWrite { source })?;
+
+      Ok(())
     }
 }

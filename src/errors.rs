@@ -22,6 +22,9 @@ pub enum Error {
 
     #[snafu(display("Too many target names on header: {}", source))]
     TargetNamesTooLong { source: std::num::TryFromIntError },
+
+    #[snafu(display("Error serializing JSON: {}", source))]
+    JsonSerialize { source: serde_json::Error },
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
