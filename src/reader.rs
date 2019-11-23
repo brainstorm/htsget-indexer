@@ -2,11 +2,11 @@ use std::path::Path;
 //use std::collections::HashMap;
 //use theban_interval_tree::{ insert };
 
-use snafu::{ OptionExt, ResultExt };
+//use snafu::{ OptionExt, ResultExt };
 use rust_htslib::bam::{ Reader, Record, Read };
 use rust_htslib::bam::ext::BamRecordExtensions;
 
-use crate::indexer::BlockIndexer;
+//use crate::indexer::BlockIndexer;
 use crate::errors::{ Result, Error };
 
 pub type TargetId = i32;

@@ -1,7 +1,6 @@
 use snafu::Snafu;
 
 use rust_htslib::bam;
-use rust_htslib::bam::ext::BamRecordExtensions;
 
 #[derive(Debug, Snafu)]
 //#[snafu(visibility = "pub")]

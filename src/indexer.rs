@@ -1,8 +1,7 @@
-use crate::reader::{BamReader, BamRead, FileOffsets, TargetId};
+use crate::reader::{BamReader, FileOffsets, TargetId};
 use crate::errors::{ Error, Result };
-use crate::store::TsvStore;
+use crate::store::CsvStore;
 use std::collections::HashMap;
-use std::ops::Range;
 use std::convert::TryFrom;
 
 pub struct TargetRange {
@@ -14,12 +13,12 @@ pub struct TargetRange {
 
 pub struct BlockIndexer {
     reader: BamReader,
-    store: TsvStore,
+    store: CsvStore,
     block_size: usize,
 }
 
 impl BlockIndexer {
-    pub fn new(reader: BamReader, store: TsvStore, block_size: usize) -> Self {
+    pub fn new(reader: BamReader, store: CsvStore, block_size: usize) -> Self {
         BlockIndexer {
             reader,
             store,
@@ -67,7 +66,6 @@ impl BlockIndexer {
                         if read_bytes >= self.block_size {
                             for (id, range) in &intervals {
                                 let target_name = &target_names[*id as usize];
-                                dbg!(target_name);
                                 self.store.store(target_name.as_str(), range);
                             }
 
