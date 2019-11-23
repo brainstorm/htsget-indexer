@@ -1,45 +1,89 @@
+use crate::reader::{BamReader, BamRead, FileOffsets, TargetId};
+use crate::errors::{ Error, Result };
+use crate::store::TsvStore;
 use std::collections::HashMap;
-use std::path::Path;
-// use theban_interval_tree::{insert};
+use std::ops::Range;
+use std::convert::TryFrom;
 
-use rust_htslib::bam::{Read, Reader, Record};
-
-struct Voffsets {
-    coffset: u32,
-    uoffset: u32,
+pub struct TargetRange {
+    pub file_start: FileOffsets,
+    pub file_end: FileOffsets,
+    pub seq_start: i32,
+    pub seq_end: i32,
 }
 
-// pub fn seek_voffset(fname: &str) {
-//     let mut bam = Reader::from_path(&Path::new(fname)).ok().expect("Error opening file.");
+pub struct BlockIndexer {
+    reader: BamReader,
+    store: TsvStore,
+    block_size: usize,
+}
 
-//     let mut voffset = Voffsets{ coffset: 0, uoffset: 0 };
-//     let mut pos_voffset = HashMap::new();
-//     let mut index = theban_interval_tree::IntervalTree::<Voffsets>::new();
+impl BlockIndexer {
+    pub fn new(reader: BamReader, store: TsvStore, block_size: usize) -> Self {
+        BlockIndexer {
+            reader,
+            store,
+            block_size,
+        }
+    }
 
-//     let mut offset = bam.tell();
+    pub fn run(&mut self) -> Result<()> {
+        let mut maybe_last_file_offset: Option<FileOffsets> = None;
+        let mut read_bytes: usize = 0;
+        let mut intervals = HashMap::<TargetId, TargetRange>::new();
+        let target_names = self.reader.target_names();
+        let target_names_len = i32::try_from(target_names.len())
+            .map_err(|source| Error::TargetNamesTooLong { source })?;
 
-//     let mut rec = Record::new();
-//     loop {
-//         if !bam.read(&mut rec).expect("error reading bam") { break; }
+        loop {
+            match self.reader.read() {
+                Ok(Some(read)) => {
+                    if read.target_id >= 0 && read.target_id < target_names_len {
+                        let entry = intervals.entry(read.target_id)
+                            .or_insert(TargetRange {
+                                file_start: FileOffsets::from_offset(i64::max_value()),
+                                file_end: FileOffsets::from_offset(0),
+                                seq_start: i32::max_value(),
+                                seq_end: i32::min_value(),
+                            });
 
-//         // Retrieve virtual offset
-//         offset = bam.tell();
-//         // Get compressed and uncompressed indexes from virtual offset
-//         let mut coffset = u32::from(u64::from(offset) >> 16);
-//         let mut uoffset = (u32::from(u64::from(offset) & 0xffff );
-//         voffset = Voffsets { coffset, uoffset };
+                        entry.file_start = FileOffsets::min(entry.file_start, read.file_start);
+                        entry.file_end = FileOffsets::max(entry.file_end, read.file_end);
+                        entry.seq_start = i32::min(entry.seq_start, read.seq_start);
+                        entry.seq_end = i32::max(entry.seq_end, read.seq_end);
 
-//         pos_voffset.insert(rec.pos(), voffset);
-//     }
+                        if let Some(last_file_offset) = maybe_last_file_offset {
+                            read_bytes += if read.file_end.coffset == last_file_offset.coffset {
+                                (read.file_end.uoffset - last_file_offset.uoffset) as usize
+                            } else {
+                                read.file_end.uoffset as usize
+                            };
+                        } else {
+                            read_bytes += read.file_end.uoffset as usize;
+                        }
 
-//     for (pos, voffsets) in pos_voffset {
-//         bam.seek(offset).unwrap();
-//         //bam.read(&mut rec).unwrap();
-//         //println!("{:?} {1: <10} {2: <10} {3: <10}", rec.tid(), pos, voffsets.uoffset, voffsets.coffset)
-//     }
-// }
+                        maybe_last_file_offset = Some(read.file_end);
 
-pub fn get_index(reference_name: &str, start: i64, end: i64) -> (i64, i64) {
-    // TODO
-    (0, 0)
+                        if read_bytes >= self.block_size {
+                            for (id, range) in &intervals {
+                                let target_name = &target_names[*id as usize];
+                                dbg!(target_name);
+                                self.store.store(target_name.as_str(), range);
+                            }
+
+                            intervals.clear();
+
+                            read_bytes -= self.block_size;
+                        }
+                    }
+                },
+                Ok(None) =>
+                    break,
+                Err(err) =>
+                    return Err(err)
+            }
+        }
+
+        Ok(())
+    }
 }
