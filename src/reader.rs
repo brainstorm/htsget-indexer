@@ -1,12 +1,8 @@
 use std::path::Path;
-//use std::collections::HashMap;
-//use theban_interval_tree::{ insert };
 
-//use snafu::{ OptionExt, ResultExt };
 use rust_htslib::bam::{ Reader, Record, Read };
 use rust_htslib::bam::ext::BamRecordExtensions;
 
-//use crate::indexer::BlockIndexer;
 use crate::errors::{ Result, Error };
 
 pub type TargetId = i32;
@@ -101,7 +97,7 @@ impl BamReader {
 
     pub fn read(&mut self) -> Result<Option<BamRead>> {
         let mut record = Record::new();
-        let mut file_start = FileOffsets::from_offset(self.reader.tell());
+        let file_start = FileOffsets::from_offset(self.reader.tell());
         match self.reader.read(&mut record) {
             Ok(true) => {
                 let length = record.inner().l_data as Offset;
@@ -115,7 +111,6 @@ impl BamReader {
                     seq_start: record.reference_start(),
                     seq_end: record.reference_end(),
                 };
-                file_start = file_end;
                 Ok(Some(read))
             }
             Ok(false) => Ok(None),

@@ -8,9 +8,9 @@ use crate::reader::Offset;
 
 #[derive(Serialize)]
 struct Row {
-  target_name: String,
-  coffset_start: Offset,
-  coffest_end: Offset,
+  target: String,
+  bytes_start: Offset,
+  bytes_end: Offset,
   seq_start: i32,
   seq_end: i32,
 }
@@ -34,9 +34,9 @@ impl CsvStore {
     pub fn store(&mut self, target_name: &str, range: &TargetRange) -> Result<()> {
 
       let row = Row {
-        target_name: target_name.to_string(),
-        coffset_start: range.file_start.coffset,
-        coffest_end: range.file_end.coffset,
+        target: target_name.to_string(),
+        bytes_start: range.file_start.coffset,
+        bytes_end: range.file_end.coffset,
         seq_start: range.seq_start,
         seq_end: range.seq_end,
       };

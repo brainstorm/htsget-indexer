@@ -1,4 +1,4 @@
-use crate::reader::{BamReader, FileOffsets, TargetId};
+use crate::reader::{ BamReader, FileOffsets, TargetId };
 use crate::errors::{ Error, Result };
 use crate::store::CsvStore;
 use std::collections::HashMap;
