@@ -2,7 +2,8 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use crate::errors::{Error, Result};
-use crate::reader::BamRead;
+use crate::reader::{BamRead, TargetId};
+use crate::indexer::TargetRange;
 
 pub struct TsvStore {
     file: File,
@@ -10,8 +11,11 @@ pub struct TsvStore {
 
 impl TsvStore {
     pub fn new(path: &str) -> Result<Self> {
-        let file = File::create(path)
+        let mut file = File::create(path)
             .map_err(|source| Error::StoreOpen { source })?;
+
+        file.write_all(b"tid\tuoffset_start\tuoffset_end\tcoffset_start\tcoffset_end\tseq_start\tseq_end\n");
+
         Ok(
             TsvStore {
                 file
@@ -19,10 +23,12 @@ impl TsvStore {
         )
     }
 
-    pub fn store(&mut self, read: &BamRead) -> Result<()> {
-        let data = format!("{}\t{}\t{}\t{}",
-                           read.voffset.coffset, read.voffset.uoffset,
-                           read.start, read.end);
+    pub fn store(&mut self, target_id: TargetId, range: &TargetRange) -> Result<()> {
+        let data = format!("{}\t{}\t{}\t{}\t{}\t{}\t{}\n",
+                           target_id,
+                           range.file_start.coffset, range.file_end.coffset,
+                           range.file_start.uoffset, range.file_end.uoffset,
+                           range.seq_start, range.seq_end);
 
         self.file.write_all(data.as_bytes())
             .map_err(|source| Error::StoreWrite { source })?;

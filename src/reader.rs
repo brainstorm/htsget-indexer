@@ -9,27 +9,77 @@ use rust_htslib::bam::ext::BamRecordExtensions;
 use crate::indexer::BlockIndexer;
 use crate::errors::{ Result, Error };
 
-pub struct Voffsets {
+pub type TargetId = i32;
+pub type Offset = u32;
+pub type VirtualFileOffsets = i64;
+pub type SeqPosition = i32;
+
+#[derive(Debug, Clone, PartialEq, Copy)]
+pub struct FileOffsets {
     /// compressed offset
-    pub coffset: u32,
+    pub coffset: Offset,
     /// uncompressed offset
-    pub uoffset: u32,
+    pub uoffset: Offset,
 }
 
-impl Voffsets {
-    /// Get a virtual offset from a file offset
-    pub fn new(offset: i64) -> Self {
-        // XXX: Revisit this byte manipulation
-        let coffset = (offset >> 16) as u32;
-        let uoffset = (offset & 0xffff ) as u32;
-        Voffsets { coffset, uoffset }
+impl FileOffsets {
+    pub fn new(coffset: Offset, uoffset: Offset) -> Self {
+        FileOffsets { coffset, uoffset }
+    }
+
+    /// Build from a virtual file offsets
+    pub fn from_offset(offsets: VirtualFileOffsets) -> Self {
+        let coffset = ((offsets >> 16) & 0xffff) as Offset;
+        let uoffset = (offsets & 0xffff ) as Offset;
+        FileOffsets { coffset, uoffset }
+    }
+
+    pub fn min(vo1: FileOffsets, vo2: FileOffsets) -> FileOffsets {
+        if vo1.coffset == vo2.coffset {
+            if vo1.uoffset <= vo2.uoffset {
+                vo1
+            }
+            else {
+                vo2
+            }
+        }
+        else {
+            if vo1.coffset <= vo2.coffset {
+                vo1
+            }
+            else {
+                vo2
+            }
+        }
+    }
+
+    pub fn max(vo1: FileOffsets, vo2: FileOffsets) -> FileOffsets {
+        if vo1.coffset == vo2.coffset {
+            if vo1.uoffset >= vo2.uoffset {
+                vo1
+            }
+            else {
+                vo2
+            }
+        }
+        else {
+            if vo1.coffset >= vo2.coffset {
+                vo1
+            }
+            else {
+                vo2
+            }
+        }
     }
 }
 
+#[derive(Debug)]
 pub struct BamRead {
-    pub voffset: Voffsets,
-    pub start: i32,
-    pub end: i32,
+    pub target_id: TargetId,
+    pub file_start: FileOffsets,
+    pub file_end: FileOffsets,
+    pub seq_start: SeqPosition,
+    pub seq_end: SeqPosition,
 }
 
 pub struct BamReader {
@@ -43,20 +93,26 @@ impl BamReader {
             .map(|reader| BamReader { reader })
     }
 
-    fn read(&mut self) -> Result<BamRead> {
+    pub fn read(&mut self) -> Result<Option<BamRead>> {
         let mut record = Record::new();
+        let mut file_start = FileOffsets::from_offset(self.reader.tell());
         match self.reader.read(&mut record) {
             Ok(true) => {
-                let offset = self.reader.tell();
-                Ok(
-                    BamRead {
-                        voffset: Voffsets::new(offset),
-                        start: record.reference_start(),
-                        end: record.reference_end(),
-                    }
-                )
+                let length = record.inner().l_data as Offset;
+                let file_end = FileOffsets::new(file_start.coffset,
+                                                           file_start.uoffset + length);
+
+                let read = BamRead {
+                    file_start,
+                    file_end,
+                    target_id: record.tid(),
+                    seq_start: record.reference_start(),
+                    seq_end: record.reference_end(),
+                };
+                file_start = file_end;
+                Ok(Some(read))
             }
-            Ok(false) => Err(Error::BamReadingUnknown {}),
+            Ok(false) => Ok(None),
             Err(source) => Err(Error::BamReading { source }),
         }
     }
