@@ -93,6 +93,12 @@ impl BamReader {
             .map(|reader| BamReader { reader })
     }
 
+    pub fn target_names(&self) -> Vec<String> {
+        self.reader.header().target_names().into_iter()
+            .map(|raw_name| String::from_utf8_lossy(raw_name).to_string())
+            .collect()
+    }
+
     pub fn read(&mut self) -> Result<Option<BamRead>> {
         let mut record = Record::new();
         let mut file_start = FileOffsets::from_offset(self.reader.tell());

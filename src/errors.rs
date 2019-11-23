@@ -20,6 +20,9 @@ pub enum Error {
 
     #[snafu(display("Error writing into the store: {}", source))]
     StoreWrite { source: std::io::Error },
+
+    #[snafu(display("Too many target names on header: {}", source))]
+    TargetNamesTooLong { source: std::num::TryFromIntError },
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
