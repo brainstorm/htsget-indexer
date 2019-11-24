@@ -7,17 +7,32 @@ pub mod store;
 pub mod errors;
 
 use errors::Result;
-use crate::store::CsvStore;
+
+#[cfg(feature = "csv")]
+use crate::store::csv::CsvStore;
+
+#[cfg(feature = "json")]
+use crate::store::json::JsonStore;
+
 
 fn main() -> Result<()> {
     let reader_path = "tests/data/htsnexus_test_NA12878.bam".to_string();
     let reader = BamReader::new(reader_path)?;
 
-    let store_path = "index.json";
-    let store = CsvStore::new(store_path)?;
+    let store = create_store()?;
 
     let block_size: usize = 64 * 1024;
     let mut indexer = BlockIndexer::new(reader, store, block_size);
 
     indexer.run()
+}
+
+#[cfg(feature = "csv")]
+fn create_store() -> Result<CsvStore> {
+    CsvStore::new("index.csv")
+}
+
+#[cfg(feature = "json")]
+fn create_store() -> Result<JsonStore> {
+    JsonStore::new("index.json")
 }

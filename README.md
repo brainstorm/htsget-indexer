@@ -1,22 +1,13 @@
 ## htsget Rust indexer
 
-At the moment we get the ADAM parquet file, as converted via:
+To generate an index in CSV format:
 
-```shell
-$ adam-submit transformAlignments input.bam output_dir
-$ parquet-tools cat -j part-r-00000.gz.parquet | jq
-```
+```sh
+cargo run --features csv
+``` 
 
-And then add [virtual offsets](https://github.com/rust-bio/rust-htslib/pull/40/files) column/field for each of those reads, alongside the chromosomic positions, namely, for each record/read:
+To generate an index in JSON format:
 
-```
-referenceName
-start
-end
-(... all ADAM/BAM fields ...)
-start_bytes
-end_bytes
-```
-
-Ideally ADAM tools could populate those extra columns (optionally), but this is early days/work, stay tuned ;)
-
+```sh
+cargo run --features json
+``` 
