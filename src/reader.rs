@@ -34,16 +34,14 @@ impl FileOffsets {
         if vo1.coffset == vo2.coffset {
             if vo1.uoffset <= vo2.uoffset {
                 vo1
-            }
-            else {
+            } else {
                 vo2
             }
         }
         else {
             if vo1.coffset <= vo2.coffset {
                 vo1
-            }
-            else {
+            } else {
                 vo2
             }
         }
@@ -77,6 +75,9 @@ pub struct BamRead {
     pub seq_start: SeqPosition,
     pub seq_end: SeqPosition,
 }
+
+// XXX: Implement BaiReader through htslib-rs IndexedReader or generalize reader
+//  with, i.e "AlignmentReader" and include CRAM transparently?
 
 pub struct BamReader {
     reader: Reader,

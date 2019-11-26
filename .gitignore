@@ -3,3 +3,6 @@
 .idea
 tests/data/htsnexus_test_NA12878_with_voffsets.parquet
 Cargo.lock
+.env
+index.csv
+index.json
