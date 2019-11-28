@@ -14,6 +14,9 @@ use crate::store::csv::CsvStore;
 #[cfg(feature = "json")]
 use crate::store::json::JsonStore;
 
+#[cfg(feature = "database")]
+use crate::store::database::DatabaseStore;
+
 
 fn main() -> Result<()> {
     let reader_path = "tests/data/htsnexus_test_NA12878.bam".to_string();
@@ -35,4 +38,9 @@ fn create_store() -> Result<CsvStore> {
 #[cfg(feature = "json")]
 fn create_store() -> Result<JsonStore> {
     JsonStore::new("index.json")
+}
+
+#[cfg(feature = "database")]
+fn create_store() -> Result<DatabaseStore> {
+    DatabaseStore::new("postgres://chris:mola@localhost:54320/htsget")
 }

@@ -1,5 +1,4 @@
 CREATE TABLE htsget_blocks (
-  id SERIAL PRIMARY KEY,
   bam_id VARCHAR NOT NULL,
   target_name VARCHAR NOT NULL,
   bytes_start INTEGER NOT NULL,
