@@ -5,6 +5,7 @@ use std::collections::HashMap;
 use std::convert::TryFrom;
 
 pub struct TargetRange {
+    pub bam_id: String,
     pub file_start: FileOffsets,
     pub file_end: FileOffsets,
     pub seq_start: i32,

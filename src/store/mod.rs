@@ -5,10 +5,9 @@ use crate::errors::Result;
 pub mod csv;
 #[cfg(feature = "json")]
 pub mod json;
-#[cfg(feature = "db")]
+#[cfg(feature = "database")]
 pub mod db;
 
 pub trait Store {
-  fn open(&mut self, resource: &str) -> Result<()>;
   fn save(&mut self, bam_id: &str, target_name: &str, range: &TargetRange) -> Result<()>;
 }

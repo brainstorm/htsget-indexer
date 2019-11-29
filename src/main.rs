@@ -15,7 +15,7 @@ use crate::store::csv::CsvStore;
 use crate::store::json::JsonStore;
 
 #[cfg(feature = "database")]
-use crate::store::database::DatabaseStore;
+use crate::store::db::DatabaseStore;
 
 
 fn main() -> Result<()> {
@@ -39,4 +39,4 @@ fn create_store() -> Result<JsonStore> {
 }
 
 #[cfg(feature = "database")]
-fn create_store() -> Result<DatabaseStore> { DatabaseStore::new("postgres://chris:mola@localhost:54320/htsget") }
+fn create_store() -> Result<DatabaseStore> { DatabaseStore::new("postgres://chris:mola@localhost:54320/htsget".to_string()) }

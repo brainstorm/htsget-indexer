@@ -21,3 +21,4 @@ default = ["database"]
 
 json = ["serde", "serde_json"]
 csv = []
+database = []
