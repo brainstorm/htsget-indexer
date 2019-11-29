@@ -1,4 +1,5 @@
 use diesel;
+use store::db::establish_connection;
 
 fn main() {
     let connection = establish_connection();

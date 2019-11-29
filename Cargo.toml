@@ -17,7 +17,7 @@ diesel = { version = "1.4.3", features = ["postgres"] }
 dotenv = "0.15.0"
 
 [features]
-default = ["json"]
+default = ["database"]
 
 json = ["serde", "serde_json"]
 csv = []

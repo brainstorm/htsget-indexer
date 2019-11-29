@@ -31,9 +31,7 @@ fn main() -> Result<()> {
 }
 
 #[cfg(feature = "csv")]
-fn create_store() -> Result<CsvStore> {
-    CsvStore::new("index.csv")
-}
+fn create_store() -> Result<CsvStore> { CsvStore::new("index.csv") }
 
 #[cfg(feature = "json")]
 fn create_store() -> Result<JsonStore> {
@@ -41,6 +39,4 @@ fn create_store() -> Result<JsonStore> {
 }
 
 #[cfg(feature = "database")]
-fn create_store() -> Result<DatabaseStore> {
-    DatabaseStore::new("postgres://chris:mola@localhost:54320/htsget")
-}
+fn create_store() -> Result<DatabaseStore> { DatabaseStore::new("postgres://chris:mola@localhost:54320/htsget") }

@@ -9,9 +9,10 @@ use crate::store::Store;
 
 #[derive(Serialize)]
 struct Row {
+  bam_id: String,
   target_name: String,
-  coffset_start: Offset,
-  coffest_end: Offset,
+  bytes_start: Offset,
+  bytes_end: Offset,
   seq_start: i32,
   seq_end: i32,
 }
@@ -34,12 +35,13 @@ impl JsonStore {
 }
 
 impl Store for JsonStore {
-  fn save(&mut self, target_name: &str, range: &TargetRange) -> Result<()> {
+  fn save(&mut self, bam_id: &str, target_name: &str, range: &TargetRange) -> Result<()> {
 
     let row = Row {
+      bam_id: bam_id.to_string(),
       target_name: target_name.to_string(),
-      coffset_start: range.file_start.coffset,
-      coffest_end: range.file_end.coffset,
+      bytes_start: range.file_start.coffset,
+      bytes_end: range.file_end.coffset,
       seq_start: range.seq_start,
       seq_end: range.seq_end,
     };
