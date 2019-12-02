@@ -1,6 +1,5 @@
 table! {
-    htsget_blocks (id) {
-        id -> Int4,
+    htsget_blocks (bam_id) {
         bam_id -> Varchar,
         target_name -> Varchar,
         bytes_start -> Int4,

@@ -1,15 +1,14 @@
-use std::env;
 use crate::errors::{Error, Result};
 use crate::indexer::TargetRange;
 use crate::reader::Offset;
 use crate::store::Store;
 
-use diesel;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
+use crate::store::schema::htsget_blocks::dsl::*;
 
 // XXX: Consolidate/share this struct with JsonStore's Row?
-//#[derive(Queryable)]
+#[derive(Insertable)]
 struct Row {
     bam_id: String,
     target_name: String,
@@ -37,7 +36,9 @@ impl DatabaseStore {
 }
 
 impl Store for DatabaseStore {
-    fn save(&mut self, bam_id: &str, target_name: &str, range: &TargetRange) -> Result<()> {
+    fn save(&mut self, bam_id: &str,
+                       target_name: &str,
+                       range: &TargetRange) -> Result<()> {
         let row = Row {
             bam_id: bam_id.to_string(),
             target_name: target_name.to_string(),
@@ -48,7 +49,7 @@ impl Store for DatabaseStore {
         };
 
         // Write the row
-        diesel::insert_into(htsget_blocks::table)
+        diesel::insert_into(htsget_blocks)
             .values(&row);
 
         Ok(())

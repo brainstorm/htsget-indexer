@@ -1,5 +1,5 @@
 #[derive(Queryable)]
-pub struct htsget_blocks {
+pub struct HtsgetBlocks {
     pub bam_id: String,
     pub target_name: String,
     pub bytes_start: u64,

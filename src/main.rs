@@ -15,6 +15,8 @@ use crate::store::csv::CsvStore;
 use crate::store::json::JsonStore;
 
 #[cfg(feature = "database")]
+#[macro_use]
+extern crate diesel;
 use crate::store::db::DatabaseStore;
 
 

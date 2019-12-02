@@ -7,6 +7,8 @@ pub mod csv;
 pub mod json;
 #[cfg(feature = "database")]
 pub mod db;
+pub mod schema;
+pub mod models;
 
 pub trait Store {
   fn save(&mut self, bam_id: &str, target_name: &str, range: &TargetRange) -> Result<()>;

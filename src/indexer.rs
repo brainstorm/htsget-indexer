@@ -3,9 +3,9 @@ use crate::errors::{ Error, Result };
 use crate::store::Store;
 use std::collections::HashMap;
 use std::convert::TryFrom;
+use uuid::Uuid;
 
 pub struct TargetRange {
-    pub bam_id: String,
     pub file_start: FileOffsets,
     pub file_end: FileOffsets,
     pub seq_start: i32,
@@ -67,7 +67,7 @@ impl<S> BlockIndexer<S> where S: Store {
                         if read_bytes >= self.block_size {
                             for (id, range) in &intervals {
                                 let target_name = &target_names[*id as usize];
-                                self.store.save(target_name.as_str(), range)?;
+                                self.store.save(Uuid::new_v4().to_string().as_str(),target_name.as_str(), range)?;
                             }
 
                             intervals.clear();
