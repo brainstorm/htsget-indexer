@@ -6,17 +6,7 @@ use crate::store::Store;
 use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use crate::store::schema::htsget_blocks::dsl::*;
-
-// XXX: Consolidate/share this struct with JsonStore's Row?
-#[derive(Insertable)]
-struct Row {
-    bam_id: String,
-    target_name: String,
-    bytes_start: Offset,
-    bytes_end: Offset,
-    seq_start: i32,
-    seq_end: i32,
-}
+use crate::store::models::HtsgetBlock;
 
 pub struct DatabaseStore {
     db: String,
@@ -36,16 +26,16 @@ impl DatabaseStore {
 }
 
 impl Store for DatabaseStore {
-    fn save(&mut self, bam_id: &str,
-                       target_name: &str,
+    fn save<T, Q>(&mut self, bam_id: bam_id,
+                       target_name: target_name,
                        range: &TargetRange) -> Result<()> {
-        let row = Row {
+        let row = HtsgetBlock {
             bam_id: bam_id.to_string(),
             target_name: target_name.to_string(),
-            bytes_start: range.file_start.coffset,
-            bytes_end: range.file_end.coffset,
-            seq_start: range.seq_start,
-            seq_end: range.seq_end,
+            bytes_start: range.file_start.coffset as u64,
+            bytes_end: range.file_end.coffset as u64,
+            seq_start: range.seq_start as u64,
+            seq_end: range.seq_end as u64,
         };
 
         // Write the row

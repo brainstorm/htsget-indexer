@@ -14,7 +14,7 @@ rust-htslib = "0.26.0"
 
 serde = { version = "1.0.102", features = ["derive"], optional = true }
 serde_json = { version = "1.0.41", optional = true }
-diesel = { version = "1.4.3", features = ["postgres"], optional = true }
+diesel = { version = "1.4.3", features = ["numeric", "postgres"], optional = true }
 dotenv = "0.15.0"
 
 [features]

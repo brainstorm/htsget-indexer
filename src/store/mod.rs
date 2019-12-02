@@ -11,5 +11,5 @@ pub mod schema;
 pub mod models;
 
 pub trait Store {
-  fn save(&mut self, bam_id: &str, target_name: &str, range: &TargetRange) -> Result<()>;
+  fn save<T, Q>(&mut self, bam_id: T, target_name: Q, range: &TargetRange) -> Result<()>;
 }
