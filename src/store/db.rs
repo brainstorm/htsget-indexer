@@ -7,7 +7,6 @@ use diesel::prelude::*;
 use diesel::pg::PgConnection;
 use crate::store::schema::htsget_blocks::dsl::*;
 use crate::store::models::HtsgetBlock;
-use diesel::sql_types::BigInt;
 
 pub struct DatabaseStore {
     db: String,
@@ -31,12 +30,12 @@ impl Store for DatabaseStore {
                        target_name: target_name,
                        range: &TargetRange) -> Result<()> {
         let row = HtsgetBlock {
-            bam_id: bam_id.to_string(),
-            target_name: target_name.to_string(),
-            bytes_start: range.file_start.coffset as BigInt,
-            bytes_end: range.file_end.coffset as BigInt,
-            seq_start: range.seq_start as BigInt,
-            seq_end: range.seq_end as BigInt,
+            bam_id: bam_id,
+            target_name: target_name,
+            bytes_start: range.file_start.coffset as i64,
+            bytes_end: range.file_end.coffset as i64,
+            seq_start: range.seq_start as i64,
+            seq_end: range.seq_end as i64,
         };
 
         // Write the row
